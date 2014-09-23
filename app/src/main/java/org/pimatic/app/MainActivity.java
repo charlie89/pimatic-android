@@ -67,11 +67,10 @@ public class MainActivity extends ActionBarActivity
 //        String response = client.getResponse();
 //        if(response != null) Log.v("response",response);
 
-        SocketIOClient client = new SocketIOClient("192.168.1.78", 8899) {
+        SocketIOClient client = new SocketIOClient("10.0.1.112", 80) {
             @Override
             public void onMessage(String eventId, Object jsonData) {
                 Log.i("socket.io", "Event: " + eventId + ", data: " + jsonData);
-
             }
 
             @Override
@@ -94,45 +93,45 @@ public class MainActivity extends ActionBarActivity
             new SocketIOClient.JsonEventListener<JSONObject>() {
                 @Override
                 public void onEvent(JSONObject o) {
-                    Log.i("dc", o.toString());
+                    Log.i("listener_dac", o.toString());
                 }
         });
-        //                runOnUiThread(new Runnable() {
-        //                    @Override
-        //                    public void run() {
-        //                        Log.i("Websocket", "Message " + message);
-        //                    }
-        //                });
-        InputStream is = getResources().openRawResource(R.raw.devices);
-        String inputStreamString = new Scanner(is, "UTF-8").useDelimiter("\\A").next();
-        JSONTokener tokener = new JSONTokener(inputStreamString);
+        client.addListener("devices",
+            new SocketIOClient.JsonEventListener<JSONArray>() {
+                @Override
+                public void onEvent(JSONArray a) {
+                    Log.i("listener_dev", a.toString());
+                    ShowDevices(a);
+                }
+        });
+    }
+
+    public void ShowDevices(JSONArray devices) {
         List<Device> list;
         try {
-            JSONArray devices = new JSONObject(tokener).getJSONArray("devices");
             DeviceManager.updateFromJson(devices);
             list = DeviceManager.getDevices();
-            Log.v("json", "devices: " + devices.toString());
 
             final ListView listview = (ListView) findViewById(R.id.devciesListView);
-
             final DeviceArrayAdapter adapter = new DeviceArrayAdapter(this, list);
-            listview.setAdapter(adapter);
 
-            listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+            runOnUiThread(new Runnable() {
                 @Override
-                public void onItemClick(AdapterView<?> parent, final View view,
-                                        int position, long id) {
+                public void run() {
+                    listview.setAdapter(adapter);
 
+                    listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, final View view,
+                                                int position, long id) {
+                        }
+                    });
                 }
-
             });
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-
     }
 
     @Override
