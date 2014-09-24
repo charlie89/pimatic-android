@@ -40,7 +40,7 @@ public class MainActivity extends ActionBarActivity
 
     private ListView listview;
     private DeviceArrayAdapter deviceAdapter;
-
+    private SocketIOClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,18 +60,7 @@ public class MainActivity extends ActionBarActivity
         listview = (ListView) findViewById(R.id.devicesListView);
         deviceAdapter = new DeviceArrayAdapter(this, new ArrayList<Device>());
 
-
-//        RestClient client = new RestClient("http://@192.168.1.78:8899/api/devices", "admin", "admin");
-//
-//        try {
-//            client.Execute(RequestMethod.GET);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        String response = client.getResponse();
-//        if(response != null) Log.v("response",response);
-
-        SocketIOClient client = new SocketIOClient("10.0.1.112", 80) {
+        client = new SocketIOClient("10.0.1.112", 80) {
             @Override
             public void onMessage(String eventId, Object jsonData) {
                 Log.i("socket.io", "Event: " + eventId + ", data: " + jsonData);
@@ -104,6 +93,11 @@ public class MainActivity extends ActionBarActivity
                         e.printStackTrace();
                     }
                     RefreshDevices();
+
+
+
+
+
                 }
             }
         );

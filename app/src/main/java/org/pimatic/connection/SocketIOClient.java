@@ -113,15 +113,16 @@ public abstract class SocketIOClient {
         engine.connect();
     }
 
-    //TODO: sendEvent
-//    public void sendEvent(String eventId, JSONObject obj) {
-//        doSendEvent(eventId, obj);
-//    }
-//
-//    private void doSendEvent(String eventId, Object obj) {
-//        engine.send(new EngineIOClient.EngineIOPackage(EngineIOClient.EngineIOPackage.TYPE_MESSAGE, obj.toString()));
-//    }
+    public void sendEvent(String eventId, JSONObject obj) {
+        JSONArray data = new JSONArray();
+        data.put(eventId);
+        data.put(obj);
+        doSendEvent(data);
+    }
 
+    private void doSendEvent(JSONArray obj) {
+        engine.send(new EngineIOClient.EngineIOPackage(EngineIOClient.EngineIOPackage.TYPE_MESSAGE, obj.toString()));
+    }
 
     private void handleOpenPackage(EngineIOClient.EngineIOPackage p) throws SocketIoPackageParseException {
         try {

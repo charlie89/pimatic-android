@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.pimatic.model.Device;
 import org.pimatic.model.DeviceVisitor;
 import org.pimatic.model.SwitchDevice;
+import org.pimatic.connection.RestAPI;
 
 public class DeviceArrayAdapter extends ArrayAdapter<Device> {
 
@@ -105,10 +106,24 @@ public class DeviceArrayAdapter extends ArrayAdapter<Device> {
     private static class SwitchDeviceHolder extends DeviceViewHolder<SwitchDevice>{
         protected Switch stateSwitch;
 
-        public void update(SwitchDevice d) {
+        public void update(final SwitchDevice d) {
             super.update(d);
             stateSwitch.setChecked(d.getState());
+
+            stateSwitch.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // Perform action on click
+                    String action;
+                    if (stateSwitch.isChecked()) {
+                        action = "turnOn";
+                    } else {
+                        action = "turnOff";
+                    }
+                    new RestAPI(action, d);
+                }
+            });
         }
+
     }
 
 
