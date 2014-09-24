@@ -20,6 +20,14 @@ public class DeviceManager {
         }
     }
 
+    public static void updateVariableFromJson(JSONObject obj) throws JSONException {
+        String variableValue = obj.getString("value");
+        String deviceId = obj.getString("deviceId");
+        String attributeName = obj.getString("attributeName");
+
+        updateOrAddVariable(deviceId, attributeName, variableValue);
+    }
+
     public static Device updateOrAddDevice(JSONObject obj) throws JSONException {
         String id = obj.getString("id");
         Device d = getDeviceById(id);
@@ -29,6 +37,15 @@ public class DeviceManager {
             //TODO: Update device
         }
         devices.add(d);
+        return d;
+    }
+
+    public static Device updateOrAddVariable(String deviceId, String attributeName, String newValue) {
+        Device d = getDeviceById(deviceId);
+        if (d != null) {
+            d.addOrModifyAttribute(attributeName, newValue);
+        }
+
         return d;
     }
 

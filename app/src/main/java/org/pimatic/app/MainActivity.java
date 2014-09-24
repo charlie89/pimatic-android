@@ -19,14 +19,11 @@ import android.widget.ListView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.pimatic.connection.SocketIOClient;
 import org.pimatic.model.Device;
 import org.pimatic.model.DeviceManager;
 
-import java.io.InputStream;
 import java.util.List;
-import java.util.Scanner;
 
 
 public class MainActivity extends ActionBarActivity
@@ -90,48 +87,53 @@ public class MainActivity extends ActionBarActivity
         };
         client.connect();
         client.addListener("deviceAttributeChanged",
-            new SocketIOClient.JsonEventListener<JSONObject>() {
-                @Override
-                public void onEvent(JSONObject o) {
-                    Log.i("listener_dac", o.toString());
-                }
-        });
+                new SocketIOClient.JsonEventListener<JSONObject>() {
+                    @Override
+                    public void onEvent(JSONObject o) {
+                        Log.i("listener_dac", o.toString());
+                        try {
+                            DeviceManager.updateVariableFromJson(o);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        RefreshDevices();
+                    }
+                });
         client.addListener("devices",
-            new SocketIOClient.JsonEventListener<JSONArray>() {
-                @Override
-                public void onEvent(JSONArray a) {
-                    Log.i("listener_dev", a.toString());
-                    ShowDevices(a);
-                }
-        });
+                new SocketIOClient.JsonEventListener<JSONArray>() {
+                    @Override
+                    public void onEvent(JSONArray a) {
+                        Log.i("listener_dev", a.toString());
+                        try {
+                            DeviceManager.updateFromJson(a);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        RefreshDevices();
+                    }
+                });
     }
 
-    public void ShowDevices(JSONArray devices) {
+    public void RefreshDevices() {
         List<Device> list;
-        try {
-            DeviceManager.updateFromJson(devices);
-            list = DeviceManager.getDevices();
+        list = DeviceManager.getDevices();
 
-            final ListView listview = (ListView) findViewById(R.id.devciesListView);
-            final DeviceArrayAdapter adapter = new DeviceArrayAdapter(this, list);
+        final ListView listview = (ListView) findViewById(R.id.devicesListView);
+        final DeviceArrayAdapter adapter = new DeviceArrayAdapter(this, list);
 
-            runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+            listview.setAdapter(adapter);
+
+            listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
-                public void run() {
-                    listview.setAdapter(adapter);
-
-                    listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, final View view,
-                                                int position, long id) {
-                        }
-                    });
+                public void onItemClick(AdapterView<?> parent, final View view,
+                                        int position, long id) {
                 }
             });
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            }
+        });
     }
 
     @Override
@@ -200,6 +202,9 @@ public class MainActivity extends ActionBarActivity
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        public DevicePageFragment() {
+        }
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -210,9 +215,6 @@ public class MainActivity extends ActionBarActivity
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
             return fragment;
-        }
-
-        public DevicePageFragment() {
         }
 
         @Override

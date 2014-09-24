@@ -16,7 +16,7 @@
         <ListView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:id="@+id/devciesListView"
+            android:id="@+id/devicesListView"
             android:layout_gravity="left"
             android:headerDividersEnabled="true" />
     </FrameLayout>

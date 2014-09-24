@@ -37,7 +37,7 @@ public class DeviceArrayAdapter extends ArrayAdapter<Device> {
             deviceName.setText(d.getName());
             for (TextView v : attributeViews) {
                 Device.Attribute a = (Device.Attribute)v.getTag();
-                v.setText(a.getFormatedValue());
+                v.setText(a.getValue());
             }
         }
 
@@ -68,7 +68,7 @@ public class DeviceArrayAdapter extends ArrayAdapter<Device> {
             for(Device.Attribute attr : d.getAttributes()) {
                 TextView attrView = new TextView(view.getContext());
                 attrView.setTag(attr);
-                attrView.setText(attr.getFormatedValue());
+                attrView.setText(attr.getValue());
                 viewHolder.attributeViews.add(attrView);
                 attrsLayout.addView(attrView);
             }

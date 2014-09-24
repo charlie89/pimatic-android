@@ -1,7 +1,5 @@
 package org.pimatic.model;
 
-import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,15 +11,22 @@ import java.util.ArrayList;
  */
 public class Device {
 
-    public abstract class Attribute<T> {
+    public class Attribute {
         private String name;
-        protected T value;
+        private String value;
+        private String type;
 
-        public Attribute(JSONObject attr, T value) throws JSONException {
-            this.name = attr.getString("name");
+        public Attribute(String name, String value, String type) {
+            this.name = name;
+            this.value = value;
+            this.type = type;
+        }
+
+        public void setValue(String value) {
             this.value = value;
         }
-        public T getValue() {
+
+        public String getValue() {
             return value;
         }
 
@@ -29,29 +34,10 @@ public class Device {
             return name;
         }
 
-        public abstract String getFormatedValue();
-    }
-
-    public class BooleanAttribute extends Attribute<Boolean> {
-        public BooleanAttribute(JSONObject attr) throws JSONException {
-            super(attr, attr.optBoolean("value", false));
+        public String getType() {
+            return type;
         }
 
-        @Override
-        public String getFormatedValue() {
-            return value.toString();
-        }
-    }
-
-    public class StringAttribute extends Attribute<String> {
-        public StringAttribute(JSONObject attr) throws JSONException {
-            super(attr, attr.optString("value", "Unknown"));
-        }
-
-        @Override
-        public String getFormatedValue() {
-            return value;
-        }
     }
 
 
@@ -65,7 +51,7 @@ public class Device {
         this.attributes = new ArrayList<Attribute>();
         JSONArray attrs = obj.getJSONArray("attributes");
         for(int i = 0; i < attrs.length(); i++) {
-            addAttribute(attrs.getJSONObject(i));
+            addOrModifyAttribute(attrs.getJSONObject(i));
         }
     }
 
@@ -75,19 +61,24 @@ public class Device {
         this.template = template;
     }
 
-    private void addAttribute(JSONObject attr) throws JSONException {
-        Attribute a = null;
-        String type = attr.getString("type");
-        if(type.equals("boolean")) {
-            a = new BooleanAttribute(attr);
-        } else if(type.equals("string")) {
-            a = new StringAttribute(attr);
-        }
+    private void addOrModifyAttribute(JSONObject attr) throws JSONException {
+        addOrModifyAttribute(attr.getString("name"), attr.getString("value"), attr.getString("type"));
+    }
+
+    public void addOrModifyAttribute(String name, String value) {
+        addOrModifyAttribute(name, value, "string");
+    }
+
+    public void addOrModifyAttribute(String name, String value, String type) {
+        Attribute a = getAttribute(name);
+
         if (a == null) {
-            Log.e("Device", "Unhandled attribute type");
+            a = new Attribute(name, value, type);
         } else {
-            this.attributes.add(a);
+            a.setValue(value);
         }
+
+        this.attributes.add(a);
     }
 
     public String getId() {
@@ -113,10 +104,10 @@ public class Device {
         return null;
     }
 
-    public Attribute<?> getAttribute(String name) {
-        for(Attribute a : attributes) {
-            if(a.getName().equals(name)) {
-                return a;
+    public Attribute getAttribute(String attrName) {
+        for(Attribute attr : attributes) {
+            if(attr.getName().equalsIgnoreCase(attrName)) {
+                return attr;
             }
         }
         return null;

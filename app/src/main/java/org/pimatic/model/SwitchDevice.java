@@ -10,11 +10,12 @@ public class SwitchDevice extends Device {
 
     public SwitchDevice(JSONObject obj) throws JSONException {
         super(obj);
-        boolean state = Device.getJsonAttribute(obj, "state").optBoolean("value", false);
     }
 
     public boolean getState() {
-        return ((Device.Attribute<Boolean>)getAttribute("state")).getValue();
+        Boolean state = getAttribute("state").getValue().equalsIgnoreCase("true");
+
+        return state;
     }
 
     public <T> T visit(DeviceVisitor<T> v) {
