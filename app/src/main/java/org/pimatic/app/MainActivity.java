@@ -21,9 +21,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.pimatic.connection.SocketIOClient;
 import org.pimatic.model.Device;
-import org.pimatic.model.DeviceManager;
 
-import java.util.List;
+import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity
@@ -39,6 +38,10 @@ public class MainActivity extends ActionBarActivity
      */
     private CharSequence mTitle;
 
+    private ListView listview;
+    private DeviceArrayAdapter deviceAdapter;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +56,10 @@ public class MainActivity extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
         Log.v("create", "hi!!!!!!!!!!!!!!");
+
+        listview = (ListView) findViewById(R.id.devicesListView);
+        deviceAdapter = new DeviceArrayAdapter(this, new ArrayList<Device>());
+
 
 //        RestClient client = new RestClient("http://@192.168.1.78:8899/api/devices", "admin", "admin");
 //
@@ -87,44 +94,40 @@ public class MainActivity extends ActionBarActivity
         };
         client.connect();
         client.addListener("deviceAttributeChanged",
-                new SocketIOClient.JsonEventListener<JSONObject>() {
-                    @Override
-                    public void onEvent(JSONObject o) {
-                        Log.i("listener_dac", o.toString());
-                        try {
-                            DeviceManager.updateVariableFromJson(o);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        RefreshDevices();
+            new SocketIOClient.JsonEventListener<JSONObject>() {
+                @Override
+                public void onEvent(JSONObject o) {
+                    Log.i("listener_dac", o.toString());
+                    try {
+                        deviceAdapter.updateVariableFromJson(o);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                });
+                    RefreshDevices();
+                }
+            }
+        );
         client.addListener("devices",
-                new SocketIOClient.JsonEventListener<JSONArray>() {
-                    @Override
-                    public void onEvent(JSONArray a) {
-                        Log.i("listener_dev", a.toString());
-                        try {
-                            DeviceManager.updateFromJson(a);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        RefreshDevices();
+            new SocketIOClient.JsonEventListener<JSONArray>() {
+                @Override
+                public void onEvent(JSONArray a) {
+                    Log.i("listener_dev", a.toString());
+                    try {
+                        deviceAdapter.updateFromJson(a);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                });
+                    ShowDevices();
+                }
+            }
+        );
     }
 
-    public void RefreshDevices() {
-        List<Device> list;
-        list = DeviceManager.getDevices();
-
-        final ListView listview = (ListView) findViewById(R.id.devicesListView);
-        final DeviceArrayAdapter adapter = new DeviceArrayAdapter(this, list);
-
+    public void ShowDevices() {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-            listview.setAdapter(adapter);
+            listview.setAdapter(deviceAdapter);
 
             listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -132,6 +135,15 @@ public class MainActivity extends ActionBarActivity
                                         int position, long id) {
                 }
             });
+            }
+        });
+    }
+
+    public void RefreshDevices() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                deviceAdapter.notifyDataSetChanged();
             }
         });
     }

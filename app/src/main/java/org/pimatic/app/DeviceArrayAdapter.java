@@ -7,25 +7,84 @@ import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.pimatic.model.Device;
 import org.pimatic.model.DeviceVisitor;
 import org.pimatic.model.SwitchDevice;
 
 public class DeviceArrayAdapter extends ArrayAdapter<Device> {
 
-    private final List<Device> list;
     private final Activity context;
     private final DeviceViewHolderCreator viewHolderCreater;
+
+    public void updateFromJson(JSONArray deviceArray) throws JSONException {
+        for(int i = 0; i < deviceArray.length(); i++) {
+            JSONObject deviceObj = deviceArray.getJSONObject(i);
+            updateOrAddDevice(deviceObj);
+        }
+    }
+
+    public void updateVariableFromJson(JSONObject obj) throws JSONException {
+        String variableValue = obj.getString("value");
+        String deviceId = obj.getString("deviceId");
+        String attributeName = obj.getString("attributeName");
+
+        updateOrAddVariable(deviceId, attributeName, variableValue);
+    }
+
+    public Device updateOrAddDevice(JSONObject obj) throws JSONException {
+        String id = obj.getString("id");
+        Device d = getDeviceById(id);
+        if (d == null) {
+            d = createDeviceFromJson(obj);
+        } else {
+            //TODO: Update device
+        }
+        this.add(d);
+        return d;
+    }
+
+    public Device updateOrAddVariable(String deviceId, String attributeName, String newValue) {
+        Device d = getDeviceById(deviceId);
+        if (d != null) {
+            d.addOrModifyAttribute(attributeName, newValue);
+        }
+
+        return d;
+    }
+
+    public Device getDeviceById(String id) {
+        for(int i = 0; i < this.getCount(); i++) {
+            Device d = this.getItem(i);
+            if(d.getId().equals(id)) {
+                return d;
+            }
+        }
+
+        return null;
+    }
+
+
+    private static Device createDeviceFromJson(JSONObject obj) throws JSONException {
+        String template = obj.getString("template");
+        if(template.equals("switch")) {
+            return new SwitchDevice(obj);
+        } else {
+            return new Device(obj);
+        }
+    }
 
     public DeviceArrayAdapter(Activity context, List<Device> list) {
         super(context, R.layout.device_layout, list);
         this.context = context;
-        this.list = list;
         this.viewHolderCreater = new DeviceViewHolderCreator();
     }
 
@@ -92,7 +151,7 @@ public class DeviceArrayAdapter extends ArrayAdapter<Device> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = null;
-        Device d = list.get(position);
+        Device d = getItem(position);
         if (convertView == null) {
             view = viewHolderCreater.createViewHolder(d);
         } else {
