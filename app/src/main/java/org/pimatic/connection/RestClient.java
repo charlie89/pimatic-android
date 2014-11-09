@@ -2,7 +2,9 @@ package org.pimatic.connection;
 
 import android.util.Log;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpMessage;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
@@ -45,6 +47,7 @@ public class RestClient {
     private String message;
 
     private String response;
+    private String responseCookie;
 
     public String getResponse() {
         return response;
@@ -56,6 +59,10 @@ public class RestClient {
 
     public int getResponseCode() {
         return responseCode;
+    }
+
+    public String getResponseCookie() {
+        return responseCookie;
     }
 
     public RestClient(String url, String username, String password)
@@ -145,6 +152,9 @@ public class RestClient {
             httpResponse = client.execute(request);
             responseCode = httpResponse.getStatusLine().getStatusCode();
             message = httpResponse.getStatusLine().getReasonPhrase();
+
+            if (httpResponse.containsHeader("Set-Cookie"))
+                responseCookie = httpResponse.getFirstHeader("Set-Cookie").getValue();
 
             HttpEntity entity = httpResponse.getEntity();
 

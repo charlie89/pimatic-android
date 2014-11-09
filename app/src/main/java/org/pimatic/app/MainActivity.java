@@ -42,9 +42,23 @@ public class MainActivity extends ActionBarActivity
     private DeviceArrayAdapter deviceAdapter;
     private SocketIOClient client;
 
+    public static String SERVER_URL;
+    public static int SERVER_PORT;
+    public static String SERVER_USER;
+    public static String SERVER_PASS;
+    public static String SERVER_COOKIE;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //TODO: Read this from the settings
+        SERVER_URL = "10.0.1.112";
+        SERVER_PORT = 80;
+        SERVER_USER = "admin";
+        SERVER_PASS = "admin";
+        SERVER_COOKIE = "";
+
         setContentView(R.layout.activity_main);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -55,12 +69,11 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
-        Log.v("create", "hi!!!!!!!!!!!!!!");
 
         listview = (ListView) findViewById(R.id.devicesListView);
         deviceAdapter = new DeviceArrayAdapter(this, new ArrayList<Device>());
 
-        client = new SocketIOClient("10.0.1.112", 80) {
+        client = new SocketIOClient(SERVER_URL, SERVER_PORT) {
             @Override
             public void onMessage(String eventId, Object jsonData) {
                 Log.i("socket.io", "Event: " + eventId + ", data: " + jsonData);

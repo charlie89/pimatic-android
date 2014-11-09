@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.pimatic.app.MainActivity;
 import org.pimatic.model.Device;
 
 /**
@@ -13,7 +14,7 @@ import org.pimatic.model.Device;
  */
 public class RestAPI {
 
-    private String url = "http://10.0.1.112/api/";
+    private String url = "http://" + MainActivity.SERVER_URL + "/api/";
 
     public RestAPI(String action, Device d) {
         new Async().execute(action, d.getId());
@@ -25,7 +26,7 @@ public class RestAPI {
         protected Boolean doInBackground(String... o) {
             //TODO: support for more API's?!
             //TODO: Read Url+Login from settings
-            RestClient client = new RestClient(url + "device/" + o[1] + "/" + o[0], "", "");
+            RestClient client = new RestClient(url + "device/" + o[1] + "/" + o[0], MainActivity.SERVER_USER, MainActivity.SERVER_PASS);
 
             try {
                 client.Execute(RequestMethod.GET);

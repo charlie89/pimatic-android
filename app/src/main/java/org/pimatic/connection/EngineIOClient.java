@@ -1,5 +1,6 @@
 package org.pimatic.connection;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.java_websocket.client.WebSocketClient;
@@ -7,6 +8,7 @@ import org.java_websocket.drafts.Draft_17;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.pimatic.app.MainActivity;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,9 +25,56 @@ abstract class EngineIOClient {
 
     private WebSocketClient ws;
 
+    private class AsyncLogin extends AsyncTask< Void, Void, Boolean> {
+
+        private String url = "http://" + MainActivity.SERVER_URL + "/login";
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            RestClient client = new RestClient(url, "", "");
+            client.AddParam("username", MainActivity.SERVER_USER);
+            client.AddParam("password", MainActivity.SERVER_PASS);
+            client.AddParam("rememberMe", "on");
+
+            try {
+                client.Execute(RequestMethod.POST);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            try {
+                JSONObject json = new JSONObject(client.getResponse());
+
+                if (json.getString("success").equalsIgnoreCase("true")) {
+                    MainActivity.SERVER_COOKIE = client.getResponseCookie();
+                    return true;
+                }
+                return false;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+    }
+
     public EngineIOClient(String host, int port) {
+        //get the Authentication Cookie which is used for the websocket connection
+        new AsyncLogin().execute();
+        //wait for the Login to complete, not beautiful but it works :/
+        while (MainActivity.SERVER_COOKIE.equals(""))
+        {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         Map<String, String> headers = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+
+        headers.put("Cookie", MainActivity.SERVER_COOKIE);
+
         try {
             ws = new WebSocketClient(new URI("ws://"+host+":"+port+"/socket.io/?EIO=2&transport=websocket"), new Draft_17(), headers, 0) {
                 @Override
